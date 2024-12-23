@@ -75,13 +75,13 @@ struct Injected<T> {
 }
 
 public final class ModuleAssembler {
-    @MainActor public static func assemble<V: UIViewController, P, I, R>(
+    @MainActor public static func assemble<V, P, I, R>(
         view: V.Type,
         presenter: P.Type,
         interactor: I.Type,
         router: R.Type
     ) -> V where
-    V: BaseViewController<Any>,
+    V: ViewProtocol,
     P: PresenterProtocol,
     I: InteractorProtocol,
     R: RouterProtocol,
@@ -344,8 +344,31 @@ public enum MainTabBar {
     }
 }
 
+@MainActor func createTabItem<V: View>(title: String, iconName: String, content: V) -> TabItem {
+    let viewController = UIHostingController(rootView: content)
+    let icon = UIImage(systemName: iconName) ?? UIImage()
+    return TabItem(view: viewController, title: title, icon: icon)
+}
 
 
 
+@MainActor
+struct TabBarContainerView: UIViewControllerRepresentable {
+    
+    let tabs: [TabItem]
+    let tabBarView: TabBarView
 
+    init(tabs: [TabItem]) {
+        // Assemble the TabBar with your library
+        self.tabs = tabs
+        self.tabBarView = MainTabBar.create(tabs: tabs)
+    }
 
+    func makeUIViewController(context: Context) -> TabBarView {
+        tabBarView
+    }
+
+    func updateUIViewController(_ uiViewController: TabBarView, context: Context) {
+        // Handle updates if needed
+    }
+}

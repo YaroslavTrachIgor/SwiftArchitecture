@@ -8,12 +8,6 @@
 import SwiftUI
 import SwiftArchitecture
 
-let homeModule = ModuleAssembler.assemble(
-    view: HomeViewController.self,
-    presenter: HomePresenter.self,
-    interactor: HomeInteractor.self,
-    router: HomeRouter.self
-)
 
 
 final class HomeViewController: BaseViewController<HomePresenter> {
