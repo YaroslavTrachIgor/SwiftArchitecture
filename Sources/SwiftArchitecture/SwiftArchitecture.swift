@@ -81,7 +81,7 @@ public final class ModuleAssembler {
         interactor: I.Type,
         router: R.Type
     ) -> V where
-    V: ViewProtocol,
+    V: BaseViewController<Any>,
     P: PresenterProtocol,
     I: InteractorProtocol,
     R: RouterProtocol,
