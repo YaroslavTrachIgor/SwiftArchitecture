@@ -124,11 +124,15 @@ public final class ModuleAssembler {
 
 
 @MainActor
-open class BaseView<P>: @preconcurrency ViewProtocol {
+open class BaseViewController<P>: UIViewController, @preconcurrency ViewProtocol {
     public var presenter: P
     
     required public init() {
         fatalError("Use ModuleAssembler")
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
