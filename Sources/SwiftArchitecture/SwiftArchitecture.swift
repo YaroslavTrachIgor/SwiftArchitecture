@@ -124,7 +124,7 @@ public final class ModuleAssembler {
 
 
 @MainActor
-public class BaseView<P>: @preconcurrency ViewProtocol {
+open class BaseView<P>: @preconcurrency ViewProtocol {
     public var presenter: P
     
     required public init() {
@@ -133,7 +133,7 @@ public class BaseView<P>: @preconcurrency ViewProtocol {
 }
 
 @MainActor
-public class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
+open class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
     
     weak public var view: V?
     public let interactor: I
@@ -147,14 +147,14 @@ public class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtoco
 }
 
 @MainActor
-public class BaseInteractor<P: AnyObject>: @preconcurrency InteractorProtocol {
+open class BaseInteractor<P: AnyObject>: @preconcurrency InteractorProtocol {
     public weak var presenter: P?
     
     required public init() {}
 }
 
 @MainActor
-public class BaseRouter<P: AnyObject>: @preconcurrency RouterProtocol {
+open class BaseRouter<P: AnyObject>: @preconcurrency RouterProtocol {
     public weak var presenter: P?
     
     required public init() {}
