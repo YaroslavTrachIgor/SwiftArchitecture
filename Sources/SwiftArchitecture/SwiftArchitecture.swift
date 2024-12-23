@@ -26,7 +26,7 @@ public protocol ViewProtocol {
     init()
 }
 
-public protocol PresenterProtocol: AnyObject {
+public protocol PresenterProtocol {
     associatedtype ViewType
     associatedtype InteractorType
     associatedtype RouterType
@@ -38,14 +38,14 @@ public protocol PresenterProtocol: AnyObject {
     init(view: ViewType, interactor: InteractorType, router: RouterType)
 }
 
-public protocol InteractorProtocol: AnyObject {
+public protocol InteractorProtocol {
     associatedtype PresenterType
     var presenter: PresenterType? { get set }
     
     init()
 }
 
-public protocol RouterProtocol: AnyObject {
+public protocol RouterProtocol {
     associatedtype PresenterType
     var presenter: PresenterType? { get set }
     
@@ -81,21 +81,21 @@ public final class ModuleAssembler {
         interactor: I.Type,
         router: R.Type
     ) -> V where
-        V: ViewProtocol,
-        P: PresenterProtocol,
-        I: InteractorProtocol,
-        R: RouterProtocol,
-        V.PresenterType == P,
-        P.ViewType == V,
-        P.InteractorType == I,
-        P.RouterType == R,
-        I.PresenterType == P,
-        R.PresenterType == P {
+    V: ViewProtocol,
+    P: PresenterProtocol,
+    I: InteractorProtocol,
+    R: RouterProtocol,
+    V.PresenterType == P,
+    P.ViewType == V,
+    P.InteractorType == I,
+    P.RouterType == R,
+    I.PresenterType == P,
+    R.PresenterType == P {
         
         var view = V.init()
-        let interactor = I.init()
-        let router = R.init()
-        let presenter = P.init(
+        var interactor = I.init()
+        var router = R.init()
+        var presenter = P.init(
             view: view,
             interactor: interactor,
             router: router
