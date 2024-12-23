@@ -21,33 +21,31 @@ import SwiftUI
 
 
 public protocol ViewProtocol {
-    associatedtype PresenterType
-    var presenter: PresenterType { get set }
+    associatedtype ViewModelType
+    var viewModel: ViewModelType { get set }
     init()
 }
 
-public protocol PresenterProtocol {
-    associatedtype ViewType
+public protocol ViewModelProtocol {
     associatedtype InteractorType
     associatedtype RouterType
     
-    var view: ViewType? { get set }
     var interactor: InteractorType { get }
     var router: RouterType { get }
     
-    init(view: ViewType, interactor: InteractorType, router: RouterType)
+    init(interactor: InteractorType, router: RouterType)
 }
 
 public protocol InteractorProtocol {
-    associatedtype PresenterType
-    var presenter: PresenterType? { get set }
+    associatedtype ViewModelType
+    var viewModel: ViewModelType? { get set }
     
     init()
 }
 
 public protocol RouterProtocol {
-    associatedtype PresenterType
-    var presenter: PresenterType? { get set }
+    associatedtype ViewModelType
+    var viewModel: ViewModelType? { get set }
     
     init()
 }
@@ -75,37 +73,35 @@ struct Injected<T> {
 }
 
 public final class ModuleAssembler {
-    @MainActor public static func assemble<V, P, I, R>(
+    @MainActor public static func assemble<V: Sendable, P, I, R>(
         view: V.Type,
         presenter: P.Type,
         interactor: I.Type,
         router: R.Type
-    ) -> V where
+    ) -> P where
     V: ViewProtocol,
-    P: PresenterProtocol,
+    P: ViewModelProtocol,
     I: InteractorProtocol,
     R: RouterProtocol,
-    V.PresenterType == P,
-    P.ViewType == V,
+    V.ViewModelType == P,
     P.InteractorType == I,
     P.RouterType == R,
-    I.PresenterType == P,
-    R.PresenterType == P {
+    I.ViewModelType == P,
+    R.ViewModelType == P {
         
         var view = V.init()
         var interactor = I.init()
         var router = R.init()
-        let presenter = P.init(
-            view: view,
+        let viewModel = P.init(
             interactor: interactor,
             router: router
         )
         
-        view.presenter = presenter
-        interactor.presenter = presenter
-        router.presenter = presenter
+        view.viewModel = viewModel
+        interactor.viewModel = viewModel
+        router.viewModel = viewModel
         
-        return view
+        return viewModel
     }
 }
 
@@ -124,8 +120,9 @@ public final class ModuleAssembler {
 
 
 @MainActor
-open class BaseViewController<P>: UIViewController, @preconcurrency ViewProtocol {
-    public var presenter: P
+open class BaseViewController<VM>: @preconcurrency ViewProtocol {
+    
+    public var viewModel: VM
     
     required public init() {
         fatalError("Use ModuleAssembler")
@@ -137,238 +134,27 @@ open class BaseViewController<P>: UIViewController, @preconcurrency ViewProtocol
 }
 
 @MainActor
-open class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
+open class ViewModel<I, R>: @preconcurrency ViewModelProtocol {
     
-    weak public var view: V?
     public let interactor: I
     public let router: R
     
-    required public init(view: V, interactor: I, router: R) {
-        self.view = view
+    required public init(interactor: I, router: R) {
         self.interactor = interactor
         self.router = router
     }
 }
 
 @MainActor
-open class BaseInteractor<P: AnyObject>: @preconcurrency InteractorProtocol {
-    public weak var presenter: P?
+open class BaseInteractor<VM: AnyObject>: @preconcurrency InteractorProtocol {
+    public weak var viewModel: VM?
     
     required public init() {}
 }
 
 @MainActor
-open class BaseRouter<P: AnyObject>: @preconcurrency RouterProtocol {
-    public weak var presenter: P?
+open class BaseRouter<VM: AnyObject>: @preconcurrency RouterProtocol {
+    public weak var viewModel: VM?
     
     required public init() {}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import UIKit
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
- 
- dynamic var currentRouter/currentRouterIndex/currentRouterID
- 
- MainRouter {
-    HomeModule()
- 
-    UserProfileModule()
- 
-    SettingsModule()
- }
- */
-
-
-@MainActor
-public final class TabBarView: BaseViewController<TabBarPresenter> {
-    private var tabView: UITabBarController
-    private var viewControllers: [UIViewController]
-    
-    required init() {
-        self.tabView = UITabBarController()
-        self.viewControllers = []
-        super.init()
-    }
-    
-    @MainActor required public init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setupTabs(_ tabs: [TabItem]) {
-        viewControllers = tabs.map { tab in
-            let viewController = tab.view
-            viewController.tabBarItem = UITabBarItem(
-                title: tab.title,
-                image: tab.icon,
-                selectedImage: tab.selectedIcon
-            )
-            return viewController
-        }
-        tabView.setViewControllers(viewControllers, animated: false)
-    }
-}
-
-
-@MainActor
-public final class TabBarPresenter: BasePresenter<TabBarView, TabBarInteractor, TabBarRouter> {
-    private var tabs: [TabItem] = []
-    
-    func configureTabs(_ tabs: [TabItem]) {
-        self.tabs = tabs
-        view?.setupTabs(tabs)
-    }
-    
-    func switchTab(to index: Int) {
-        router.switchToTab(at: index)
-    }
-}
-
-@MainActor
-public final class TabBarInteractor: BaseInteractor<TabBarPresenter> {
-    // Add any business logic needed for tab management
-}
-
-@MainActor
-public final class TabBarRouter: BaseRouter<TabBarPresenter> {
-    func switchToTab(at index: Int) {
-        // Handle tab switching logic
-    }
-}
-
-public struct TabItem {
-    let view: UIViewController
-    let title: String
-    let icon: UIImage
-    let selectedIcon: UIImage?
-    
-    public init(
-        view: UIViewController,
-        title: String,
-        icon: UIImage,
-        selectedIcon: UIImage? = nil
-    ) {
-        self.view = view
-        self.title = title
-        self.icon = icon
-        self.selectedIcon = selectedIcon ?? icon
-    }
-}
-
-
-
-
-
-
-@MainActor
-public enum MainTabBar {
-    static func create(tabs: [TabItem]) -> TabBarView {
-        let tabBar = ModuleAssembler.assemble(
-            view: TabBarView.self,
-            presenter: TabBarPresenter.self,
-            interactor: TabBarInteractor.self,
-            router: TabBarRouter.self
-        )
-        
-        tabBar.presenter.configureTabs(tabs)
-        return tabBar
-    }
-}
-
-@MainActor public func createTabItem<V: View>(title: String, iconName: String, content: V) -> TabItem {
-    let viewController = UIHostingController(rootView: content)
-    let icon = UIImage(systemName: iconName) ?? UIImage()
-    return TabItem(view: viewController, title: title, icon: icon)
-}
-
-
-
-@MainActor
-public struct TabBarContainerView: UIViewControllerRepresentable {
-    
-    public let tabs: [TabItem]
-    public let tabBarView: TabBarView
-
-    public init(tabs: [TabItem]) {
-        // Assemble the TabBar with your library
-        self.tabs = tabs
-        self.tabBarView = MainTabBar.create(tabs: tabs)
-    }
-
-    public func makeUIViewController(context: Context) -> TabBarView {
-        tabBarView
-    }
-
-    public func updateUIViewController(_ uiViewController: TabBarView, context: Context) {
-        // Handle updates if needed
-    }
 }
