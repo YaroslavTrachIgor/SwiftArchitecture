@@ -20,13 +20,13 @@ import SwiftUI
 ///****************************************************************************************************************************************************************************
 
 
-protocol ViewProtocol: AnyObject {
+public protocol ViewProtocol: AnyObject {
     associatedtype PresenterType
     var presenter: PresenterType { get set }
     init()
 }
 
-protocol PresenterProtocol: AnyObject {
+public protocol PresenterProtocol: AnyObject {
     associatedtype ViewType
     associatedtype InteractorType
     associatedtype RouterType
@@ -38,14 +38,14 @@ protocol PresenterProtocol: AnyObject {
     init(view: ViewType, interactor: InteractorType, router: RouterType)
 }
 
-protocol InteractorProtocol: AnyObject {
+public protocol InteractorProtocol: AnyObject {
     associatedtype PresenterType
     var presenter: PresenterType? { get set }
     
     init()
 }
 
-protocol RouterProtocol: AnyObject {
+public protocol RouterProtocol: AnyObject {
     associatedtype PresenterType
     var presenter: PresenterType? { get set }
     
@@ -74,7 +74,7 @@ struct Injected<T> {
     }
 }
 
-final class ModuleAssembler {
+public final class ModuleAssembler {
     static func assemble<V, P, I, R>(
         view: V.Type,
         presenter: P.Type,
@@ -124,22 +124,22 @@ final class ModuleAssembler {
 
 
 @MainActor
-class BaseView<P>: @preconcurrency ViewProtocol {
-    var presenter: P
+public class BaseView<P>: @preconcurrency ViewProtocol {
+    public var presenter: P
     
-    required init() {
+    required public init() {
         fatalError("Use ModuleAssembler")
     }
 }
 
 @MainActor
-class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
+public class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
     
-    weak var view: V?
-    let interactor: I
-    let router: R
+    weak public var view: V?
+    public let interactor: I
+    public let router: R
     
-    required init(view: V, interactor: I, router: R) {
+    required public init(view: V, interactor: I, router: R) {
         self.view = view
         self.interactor = interactor
         self.router = router
@@ -147,17 +147,17 @@ class BasePresenter<V: AnyObject, I, R>: @preconcurrency PresenterProtocol {
 }
 
 @MainActor
-class BaseInteractor<P: AnyObject>: @preconcurrency InteractorProtocol {
-    weak var presenter: P?
+public class BaseInteractor<P: AnyObject>: @preconcurrency InteractorProtocol {
+    public weak var presenter: P?
     
-    required init() {}
+    required public init() {}
 }
 
 @MainActor
-class BaseRouter<P: AnyObject>: @preconcurrency RouterProtocol {
-    weak var presenter: P?
+public class BaseRouter<P: AnyObject>: @preconcurrency RouterProtocol {
+    public weak var presenter: P?
     
-    required init() {}
+    required public init() {}
 }
 
 
@@ -246,7 +246,7 @@ import UIKit
 
 
 @MainActor
-final class TabBarView: BaseView<TabBarPresenter> {
+public final class TabBarView: BaseView<TabBarPresenter> {
     private var tabView: UITabBarController
     private var viewControllers: [UIViewController]
     
@@ -272,7 +272,7 @@ final class TabBarView: BaseView<TabBarPresenter> {
 
 
 @MainActor
-final class TabBarPresenter: BasePresenter<TabBarView, TabBarInteractor, TabBarRouter> {
+public final class TabBarPresenter: BasePresenter<TabBarView, TabBarInteractor, TabBarRouter> {
     private var tabs: [TabItem] = []
     
     func configureTabs(_ tabs: [TabItem]) {
@@ -286,18 +286,18 @@ final class TabBarPresenter: BasePresenter<TabBarView, TabBarInteractor, TabBarR
 }
 
 @MainActor
-final class TabBarInteractor: BaseInteractor<TabBarPresenter> {
+public final class TabBarInteractor: BaseInteractor<TabBarPresenter> {
     // Add any business logic needed for tab management
 }
 
 @MainActor
-final class TabBarRouter: BaseRouter<TabBarPresenter> {
+public final class TabBarRouter: BaseRouter<TabBarPresenter> {
     func switchToTab(at index: Int) {
         // Handle tab switching logic
     }
 }
 
-struct TabItem {
+public struct TabItem {
     let view: UIViewController
     let title: String
     let icon: UIImage
@@ -322,7 +322,7 @@ struct TabItem {
 
 
 @MainActor
-enum MainTabBar {
+public enum MainTabBar {
     static func create(tabs: [TabItem]) -> TabBarView {
         let tabBar = ModuleAssembler.assemble(
             view: TabBarView.self,
@@ -335,8 +335,6 @@ enum MainTabBar {
         return tabBar
     }
 }
-
-
 
 
 

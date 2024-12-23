@@ -1,0 +1,15 @@
+{
+  "originHash" : "afd3a377127a52c45399740ce04d429e6aaca6c0b3b2315a7ec342e540c82feb",
+  "pins" : [
+    {
+      "identity" : "swiftarchitecture",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/YaroslavTrachIgor/SwiftArchitecture",
+      "state" : {
+        "branch" : "main",
+        "revision" : "aa2cd1f381373bb209f592140e1e645a678bc0ec"
+      }
+    }
+  ],
+  "version" : 3
+}
