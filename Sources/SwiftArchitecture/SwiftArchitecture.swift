@@ -95,7 +95,7 @@ public final class ModuleAssembler {
         var view = V.init()
         var interactor = I.init()
         var router = R.init()
-        var presenter = P.init(
+        let presenter = P.init(
             view: view,
             interactor: interactor,
             router: router
