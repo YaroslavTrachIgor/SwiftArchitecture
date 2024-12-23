@@ -250,7 +250,7 @@ import UIKit
 
 
 @MainActor
-public final class TabBarView: BaseView<TabBarPresenter> {
+public final class TabBarView: BaseViewController<TabBarPresenter> {
     private var tabView: UITabBarController
     private var viewControllers: [UIViewController]
     
@@ -258,6 +258,10 @@ public final class TabBarView: BaseView<TabBarPresenter> {
         self.tabView = UITabBarController()
         self.viewControllers = []
         super.init()
+    }
+    
+    @MainActor required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     func setupTabs(_ tabs: [TabItem]) {
