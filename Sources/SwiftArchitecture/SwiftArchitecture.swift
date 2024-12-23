@@ -23,7 +23,7 @@ import SwiftUI
 public protocol ViewProtocol {
     associatedtype ViewModelType
     var viewModel: ViewModelType { get set }
-    init()
+    init(viewModel: ViewModelType)
 }
 
 public protocol ViewModelProtocol {
@@ -75,13 +75,13 @@ struct Injected<T> {
 public final class ModuleAssembler {
     @MainActor public static func assemble<V: Sendable, P, I, R>(
         view: V.Type,
-        presenter: P.Type,
+        viewModel: P.Type,
         interactor: I.Type,
         router: R.Type
     ) -> P where
     V: ViewProtocol,
-    P: ViewModelProtocol,
     I: InteractorProtocol,
+    P: ViewModelProtocol,
     R: RouterProtocol,
     V.ViewModelType == P,
     P.InteractorType == I,
@@ -89,15 +89,14 @@ public final class ModuleAssembler {
     I.ViewModelType == P,
     R.ViewModelType == P {
         
-        var view = V.init()
         var interactor = I.init()
         var router = R.init()
         let viewModel = P.init(
             interactor: interactor,
             router: router
         )
+        var view = V.init(viewModel: viewModel)
         
-        view.viewModel = viewModel
         interactor.viewModel = viewModel
         router.viewModel = viewModel
         
@@ -124,8 +123,8 @@ open class BaseViewController<VM>: @preconcurrency ViewProtocol {
     
     public var viewModel: VM
     
-    required public init() {
-        fatalError("Use ModuleAssembler")
+    required public init(viewModel: VM) {
+        self.viewModel = viewModel
     }
     
     required public init?(coder: NSCoder) {
@@ -158,3 +157,9 @@ open class BaseRouter<VM: AnyObject>: @preconcurrency RouterProtocol {
     
     required public init() {}
 }
+
+
+
+
+
+
