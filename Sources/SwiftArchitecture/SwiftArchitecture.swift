@@ -64,7 +64,7 @@ public protocol RouterProtocol: AnyObject {
 struct Injected<T> {
     private var value: T
     
-    init(_ builder: () -> T) {
+    public init(_ builder: () -> T) {
         self.value = builder()
     }
     
@@ -75,7 +75,7 @@ struct Injected<T> {
 }
 
 public final class ModuleAssembler {
-    static func assemble<V, P, I, R>(
+    public static func assemble<V, P, I, R>(
         view: V.Type,
         presenter: P.Type,
         interactor: I.Type,
@@ -303,7 +303,7 @@ public struct TabItem {
     let icon: UIImage
     let selectedIcon: UIImage?
     
-    init(
+    public init(
         view: UIViewController,
         title: String,
         icon: UIImage,
