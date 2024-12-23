@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import SwiftArchitecture
 
 @main
 struct example_swift_architectureApp: App {
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            TabBarConta
         }
     }
 }

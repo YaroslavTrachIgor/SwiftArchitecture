@@ -353,7 +353,7 @@ public enum MainTabBar {
 
 
 @MainActor
-struct TabBarContainerView: UIViewControllerRepresentable {
+public struct TabBarContainerView: UIViewControllerRepresentable {
     
     let tabs: [TabItem]
     let tabBarView: TabBarView

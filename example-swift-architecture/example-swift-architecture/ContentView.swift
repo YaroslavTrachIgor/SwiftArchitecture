@@ -25,9 +25,6 @@ final class HomeViewController: BaseViewController<HomePresenter> {
     }
 }
 
-let tabs = [
-    createTabItem(title: "Home", iconName: "house", content: HomeView())
-]
 
 
 
