@@ -20,7 +20,7 @@ import SwiftUI
 ///****************************************************************************************************************************************************************************
 
 
-public protocol ViewProtocol: AnyObject {
+public protocol ViewProtocol {
     associatedtype PresenterType
     var presenter: PresenterType { get set }
     init()
@@ -92,7 +92,7 @@ public final class ModuleAssembler {
         I.PresenterType == P,
         R.PresenterType == P {
         
-        let view = V.init()
+        var view = V.init()
         let interactor = I.init()
         let router = R.init()
         let presenter = P.init(

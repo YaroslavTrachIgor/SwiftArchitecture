@@ -9,11 +9,27 @@ import SwiftUI
 import SwiftArchitecture
 
 let homeModule = ModuleAssembler.assemble(
-    view: HomeView.self,
+    view: HomeViewController.self,
     presenter: HomePresenter.self,
     interactor: HomeInteractor.self,
     router: HomeRouter.self
 )
+
+
+final class HomeViewController: UIViewController, BaseView<HomePresenter> {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        let homeView = HomeView()
+        let hostingController = UIHostingController(rootView: homeView)
+        
+        addChild(hostingController)
+        view.addSubview(hostingController.view)
+        hostingController.view.frame = view.bounds
+        hostingController.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        hostingController.didMove(toParent: self)
+    }
+}
 
 let tabs = [
     TabItem(
@@ -42,7 +58,7 @@ struct HomeView: View {
 
 
 @MainActor
-final class HomePresenter: BasePresenter<HomeView, HomeInteractor, HomeRouter> {
+final class HomePresenter: BasePresenter<UIViewController, HomeInteractor, HomeRouter> {
     func viewDidLoad() {
         // Handle view lifecycle
     }
