@@ -75,7 +75,7 @@ struct Injected<T> {
 }
 
 public final class ModuleAssembler {
-    public static func assemble<V, P, I, R>(
+    @MainActor public static func assemble<V, P, I, R>(
         view: V.Type,
         presenter: P.Type,
         interactor: I.Type,
@@ -90,7 +90,8 @@ public final class ModuleAssembler {
     P.InteractorType == I,
     P.RouterType == R,
     I.PresenterType == P,
-    R.PresenterType == P {
+    R.PresenterType == P,
+    V: UIViewController {
         
         var view = V.init()
         var interactor = I.init()

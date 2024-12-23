@@ -16,7 +16,7 @@ let homeModule = ModuleAssembler.assemble(
 )
 
 
-final class HomeViewController: UIViewController, BaseView<HomePresenter> {
+final class HomeViewController: BaseViewController<HomePresenter> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
