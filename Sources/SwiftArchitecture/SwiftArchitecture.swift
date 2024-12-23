@@ -344,7 +344,7 @@ public enum MainTabBar {
     }
 }
 
-@MainActor func createTabItem<V: View>(title: String, iconName: String, content: V) -> TabItem {
+@MainActor public func createTabItem<V: View>(title: String, iconName: String, content: V) -> TabItem {
     let viewController = UIHostingController(rootView: content)
     let icon = UIImage(systemName: iconName) ?? UIImage()
     return TabItem(view: viewController, title: title, icon: icon)
