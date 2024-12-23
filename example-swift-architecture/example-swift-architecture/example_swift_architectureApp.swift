@@ -12,7 +12,7 @@ import SwiftArchitecture
 struct example_swift_architectureApp: App {
     var body: some Scene {
         WindowGroup {
-            TabBarConta
+            TabBarContainerView(tabs: [createTabItem(title: "Home", iconName: "house", content: HomeView())])
         }
     }
 }

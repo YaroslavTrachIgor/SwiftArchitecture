@@ -355,20 +355,20 @@ public enum MainTabBar {
 @MainActor
 public struct TabBarContainerView: UIViewControllerRepresentable {
     
-    let tabs: [TabItem]
-    let tabBarView: TabBarView
+    public let tabs: [TabItem]
+    public let tabBarView: TabBarView
 
-    init(tabs: [TabItem]) {
+    public init(tabs: [TabItem]) {
         // Assemble the TabBar with your library
         self.tabs = tabs
         self.tabBarView = MainTabBar.create(tabs: tabs)
     }
 
-    func makeUIViewController(context: Context) -> TabBarView {
+    public func makeUIViewController(context: Context) -> TabBarView {
         tabBarView
     }
 
-    func updateUIViewController(_ uiViewController: TabBarView, context: Context) {
+    public func updateUIViewController(_ uiViewController: TabBarView, context: Context) {
         // Handle updates if needed
     }
 }
