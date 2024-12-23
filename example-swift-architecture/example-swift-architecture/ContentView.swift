@@ -26,11 +26,7 @@ final class HomeViewController: BaseViewController<HomePresenter> {
 }
 
 let tabs = [
-    TabItem(
-        view: homeModule,
-        title: "Home",
-        icon: UIImage(systemName: "house")!
-    )
+    createTabItem(title: "Home", iconName: "house", content: HomeView())
 ]
 
 
