@@ -275,3 +275,13 @@ open class ViewModel<I, R>: @preconcurrency ViewModelProtocol {
         self.error = error
     }
 }
+
+struct NavigationControllerRepresentable: UIViewControllerRepresentable {
+    let navigationController: UINavigationController
+    
+    func makeUIViewController(context: Context) -> UINavigationController {
+        navigationController
+    }
+    
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
+}
