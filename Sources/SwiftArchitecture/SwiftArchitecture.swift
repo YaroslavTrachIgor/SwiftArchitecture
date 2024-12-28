@@ -119,7 +119,7 @@ public typealias BaseSwiftUIView = View & BaseSwiftUIViewProtocol
 
 
 @MainActor
-open class ViewModel<I, R>: @preconcurrency ViewModelProtocol {
+open class ViewModel<I, R>: @preconcurrency ViewModelProtocol, ObservableObject {
     
     public let interactor: I
     public let router: R
