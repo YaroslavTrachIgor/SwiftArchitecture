@@ -133,33 +133,145 @@ open class BaseViewController<VM>: @preconcurrency ViewProtocol {
 }
 
 @MainActor
-open class ViewModel<I, R>: @preconcurrency ViewModelProtocol {
-    
-    public let interactor: I
-    public let router: R
-    
-    required public init(interactor: I, router: R) {
-        self.interactor = interactor
-        self.router = router
-    }
-}
-
-@MainActor
 open class BaseInteractor<VM: AnyObject>: @preconcurrency InteractorProtocol {
     public weak var viewModel: VM?
     
     required public init() {}
 }
 
+
+
+
+
+
+
+
+
+
+
 @MainActor
-open class BaseRouter<VM: AnyObject>: @preconcurrency RouterProtocol {
-    public weak var viewModel: VM?
+public final class DependencyContainer {
+    private var dependencies: [String: Any] = [:]
+    public static let shared = DependencyContainer()
     
-    required public init() {}
+    public func register<T>(_ type: T.Type, instance: T) {
+        let key = String(describing: type)
+        dependencies[key] = instance
+    }
+    
+    public func resolve<T>() -> T {
+        let key = String(describing: T.self)
+        guard let instance = dependencies[key] as? T else {
+            fatalError("No dependency found for \(T.self)")
+        }
+        return instance
+    }
 }
 
 
+@propertyWrapper
+public struct Observable<Value> {
+    private var value: Value
+    private var observers = [(Value) -> Void]()
+    
+    public init(wrappedValue: Value) {
+        self.value = wrappedValue
+    }
+    
+    public var wrappedValue: Value {
+        get { value }
+        set {
+            value = newValue
+            notifyObservers()
+        }
+    }
+    
+    public var projectedValue: Observable<Value> {
+        get { self }
+        set { self = newValue }
+    }
+    
+    public mutating func bind(_ observer: @escaping (Value) -> Void) {
+        observers.append(observer)
+        observer(value)
+    }
+    
+    private func notifyObservers() {
+        observers.forEach { $0(value) }
+    }
+}
+
+@MainActor
+public protocol NavigationCoordinator: AnyObject {
+    func start()
+    func coordinate(to coordinator: NavigationCoordinator)
+    func finish()
+}
+
+@MainActor
+open class BaseCoordinator: NavigationCoordinator {
+    private var childCoordinators: [NavigationCoordinator] = []
+    
+    public func start() {}
+    
+    public func coordinate(to coordinator: NavigationCoordinator) {
+        childCoordinators.append(coordinator)
+        coordinator.start()
+    }
+    
+    public func finish() {
+        childCoordinators.removeAll()
+    }
+}
+
+@MainActor
+open class BaseRouter<VM: AnyObject>: @preconcurrency RouterProtocol {
+    public weak var viewModel: VM?
+    public weak var navigationController: UINavigationController?
+    private var coordinator: BaseCoordinator?
+    
+    required public init() {}
+    
+    public func setNavigationController(_ nav: UINavigationController) {
+        self.navigationController = nav
+    }
+    
+    public func setCoordinator(_ coordinator: BaseCoordinator) {
+        self.coordinator = coordinator
+    }
+    
+    public func push<T: UIViewController>(_ viewController: T, animated: Bool = true) {
+        navigationController?.pushViewController(viewController, animated: animated)
+    }
+    
+    public func pop(animated: Bool = true) {
+        navigationController?.popViewController(animated: animated)
+    }
+    
+    public func present<T: UIViewController>(_ viewController: T, animated: Bool = true) {
+        navigationController?.present(viewController, animated: animated)
+    }
+}
 
 
-
-
+@MainActor
+open class ViewModel<I, R>: @preconcurrency ViewModelProtocol {
+    public let interactor: I
+    public let router: R
+    
+    private(set) var isLoading = false
+    private(set) var error: Error?
+    
+    required public init(interactor: I, router: R) {
+        self.interactor = interactor
+        self.router = router
+    }
+    
+    public func setLoading(_ loading: Bool) {
+        isLoading = loading
+    }
+    
+    public func setError(_ error: Error?) {
+        self.error = error
+    }
+}
