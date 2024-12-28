@@ -66,34 +66,27 @@ struct Injected<T> {
 }
 
 public final class ModuleAssembler {
-    @MainActor public static func assemble<V, P, I, R>(
-        view: V.Type,
+    @MainActor public static func assemble<P, I, R>(
         viewModel: P.Type,
         interactor: I.Type,
         router: R.Type
-    ) -> V where
-    V: BaseSwiftUIViewProtocol,
+    ) -> P where
     I: InteractorProtocol,
     P: ViewModelProtocol,
     R: RouterProtocol,
-    V.ViewModel == P,
     P.InteractorType == I,
     P.RouterType == R,
     I.ViewModelType == P,
     R.ViewModelType == P {
-        
         var interactor = I.init()
         var router = R.init()
         let viewModel = P.init(
             interactor: interactor,
             router: router
         )
-        var view = V.init(viewModel: viewModel)
-        
         interactor.viewModel = viewModel
         router.viewModel = viewModel
-        
-        return view
+        return viewModel
     }
 }
 
