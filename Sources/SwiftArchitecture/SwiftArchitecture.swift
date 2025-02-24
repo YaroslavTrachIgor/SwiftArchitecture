@@ -5,19 +5,7 @@ import Foundation
 import UIKit
 import SwiftUI
 
-///****************************************************************************************************************************************************************************
-//MARK: - ()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()
-/******************************************************************************************************************************************************************************
-
- |\   ____\|\  \     |\  \|\  \|\  _____\\___   ___\     |\   __  \|\   __  \|\   ____\|\  \|\  \|\  \|\___   ___\\  ___ \ |\   ____\\___   ___\\  \|\  \|\   __  \|\  ___ \
- \ \  \___|\ \  \    \ \  \ \  \ \  \__/\|___ \  \_|     \ \  \|\  \ \  \|\  \ \  \___|\ \  \\\  \ \  \|___ \  \_\ \   __/|\ \  \___\|___ \  \_\ \  \\\  \ \  \|\  \ \   __/|
-  \ \_____  \ \  \  __\ \  \ \  \ \   __\    \ \  \       \ \   __  \ \   _  _\ \  \    \ \   __  \ \  \   \ \  \ \ \  \_|/_\ \  \       \ \  \ \ \  \\\  \ \   _  _\ \  \_|/__
-   \|____|\  \ \  \|\__\_\  \ \  \ \  \_|     \ \  \       \ \  \ \  \ \  \\  \\ \  \____\ \  \ \  \ \  \   \ \  \ \ \  \_|\ \ \  \____   \ \  \ \ \  \\\  \ \  \\  \\ \  \_|\
-     ____\_\  \ \____________\ \__\ \__\       \ \__\       \ \__\ \__\ \__\\ _\\ \_______\ \__\ \__\ \__\   \ \__\ \ \_______\ \_______\  \ \__\ \ \_______\ \__\\ _\\ \______
- 
-******************************************************************************************************************************************************************************/
-//MARK: - ()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()-()
-///****************************************************************************************************************************************************************************
+// MARK: - Library Code
 
 public protocol ViewModelProtocol {
     associatedtype InteractorType
@@ -38,18 +26,16 @@ public protocol InteractorProtocol {
 
 public protocol RouterProtocol {
     associatedtype ViewModelType
-    var viewModel: ViewModelType? { get set }
+    associatedtype Destination: Hashable // Define navigation destinations
     
-    init()
+    var viewModel: ViewModelType? { get set }
+    var navigationCoordinator: NavigationCoordinator<Destination> { get }
+    
+    init(navigationCoordinator: NavigationCoordinator<Destination>)
+    
+    func navigate(to destination: Destination)
+    func dismiss()
 }
-
-
-
-
-
-
-
-
 
 @propertyWrapper
 struct Injected<T> {
@@ -65,11 +51,31 @@ struct Injected<T> {
     }
 }
 
+// Navigation Coordinator to manage navigation state
+public final class NavigationCoordinator<Destination: Hashable>: ObservableObject {
+    @Published public var path: [Destination] = []
+    
+    public init() {}
+    
+    public func push(_ destination: Destination) {
+        path.append(destination)
+    }
+    
+    public func pop() {
+        path.removeLast()
+    }
+    
+    public func popToRoot() {
+        path.removeAll()
+    }
+}
+
 public final class ModuleAssembler {
     @MainActor public static func assemble<P, I, R>(
         viewModel: P.Type,
         interactor: I.Type,
-        router: R.Type
+        router: R.Type,
+        navigationCoordinator: NavigationCoordinator<R.Destination>
     ) -> P where
     I: InteractorProtocol,
     P: ViewModelProtocol,
@@ -79,48 +85,23 @@ public final class ModuleAssembler {
     I.ViewModelType == P,
     R.ViewModelType == P {
         var interactor = I.init()
-        var router = R.init()
-        let viewModel = P.init(
-            interactor: interactor,
-            router: router
-        )
+        var router = R.init(navigationCoordinator: navigationCoordinator)
+        let viewModel = P.init(interactor: interactor, router: router)
         interactor.viewModel = viewModel
         router.viewModel = viewModel
         return viewModel
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 public protocol BaseSwiftUIViewProtocol {
     associatedtype ViewModel
-    init (viewModel: ViewModel)
+    init(viewModel: ViewModel)
 }
 
 public typealias BaseSwiftUIView = View & BaseSwiftUIViewProtocol
 
-
-
-
-
-
-
-
-
 @MainActor
 open class ViewModel<I, R>: @preconcurrency ViewModelProtocol, ObservableObject {
-    
     public let interactor: I
     public let router: R
     
@@ -138,14 +119,21 @@ open class BaseInteractor<VM: AnyObject>: @preconcurrency InteractorProtocol {
 }
 
 @MainActor
-open class BaseRouter<VM: AnyObject>: @preconcurrency RouterProtocol {
-    public weak var viewModel: VM?
+open class BaseRouter<VM: AnyObject, D: Hashable>: @preconcurrency RouterProtocol {
+    public typealias Destination = D
     
-    required public init() {}
+    public weak var viewModel: VM?
+    public let navigationCoordinator: NavigationCoordinator<Destination>
+    
+    required public init(navigationCoordinator: NavigationCoordinator<Destination>) {
+        self.navigationCoordinator = navigationCoordinator
+    }
+    
+    public func navigate(to destination: Destination) {
+        navigationCoordinator.push(destination)
+    }
+    
+    public func dismiss() {
+        navigationCoordinator.pop()
+    }
 }
-
-
-
-
-
-
