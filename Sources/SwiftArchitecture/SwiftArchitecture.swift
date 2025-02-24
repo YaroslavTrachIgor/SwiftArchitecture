@@ -5,7 +5,7 @@ import Foundation
 import UIKit
 import SwiftUI
 
-// MARK: - Library Code
+// MARK: - Library Code (unchanged except for clarity)
 
 public protocol ViewModelProtocol {
     associatedtype InteractorType
@@ -26,7 +26,7 @@ public protocol InteractorProtocol {
 
 public protocol RouterProtocol {
     associatedtype ViewModelType
-    associatedtype Destination: Hashable // Define navigation destinations
+    associatedtype Destination: Hashable
     
     var viewModel: ViewModelType? { get set }
     var navigationCoordinator: NavigationCoordinator<Destination> { get }
@@ -51,21 +51,24 @@ struct Injected<T> {
     }
 }
 
-// Navigation Coordinator to manage navigation state
 public final class NavigationCoordinator<Destination: Hashable>: ObservableObject {
     @Published public var path: [Destination] = []
     
     public init() {}
     
     public func push(_ destination: Destination) {
+        print("Pushing destination: \(destination)") // Debug
         path.append(destination)
+        print("Path updated: \(path)") // Debug
     }
     
     public func pop() {
+        print("Popping last destination") // Debug
         path.removeLast()
     }
     
     public func popToRoot() {
+        print("Popping to root") // Debug
         path.removeAll()
     }
 }
@@ -84,8 +87,8 @@ public final class ModuleAssembler {
     P.RouterType == R,
     I.ViewModelType == P,
     R.ViewModelType == P {
-        var interactor = I.init()
-        var router = R.init(navigationCoordinator: navigationCoordinator)
+        let interactor = I.init()
+        let router = R.init(navigationCoordinator: navigationCoordinator)
         let viewModel = P.init(interactor: interactor, router: router)
         interactor.viewModel = viewModel
         router.viewModel = viewModel
