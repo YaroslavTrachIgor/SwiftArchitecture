@@ -87,8 +87,8 @@ public final class ModuleAssembler {
     P.RouterType == R,
     I.ViewModelType == P,
     R.ViewModelType == P {
-        let interactor = I.init()
-        let router = R.init(navigationCoordinator: navigationCoordinator)
+        var interactor = I.init()
+        var router = R.init(navigationCoordinator: navigationCoordinator)
         let viewModel = P.init(interactor: interactor, router: router)
         interactor.viewModel = viewModel
         router.viewModel = viewModel
