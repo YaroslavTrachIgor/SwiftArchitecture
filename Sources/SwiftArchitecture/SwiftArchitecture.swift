@@ -5,7 +5,7 @@ import Foundation
 import UIKit
 import SwiftUI
 
-// MARK: - Library Code (unchanged except for clarity)
+// MARK: - Library Code
 
 public protocol ViewModelProtocol {
     associatedtype InteractorType
@@ -32,7 +32,6 @@ public protocol RouterProtocol {
     var navigationCoordinator: NavigationCoordinator<Destination> { get }
     
     init(navigationCoordinator: NavigationCoordinator<Destination>)
-    
     func navigate(to destination: Destination)
     func dismiss()
 }
@@ -51,25 +50,36 @@ struct Injected<T> {
     }
 }
 
-public final class NavigationCoordinator<Destination: Hashable>: ObservableObject {
+// Simplified NavigationCoordinator with a reference to another coordinator
+public class NavigationCoordinator<Destination: Hashable>: ObservableObject {
     @Published public var path: [Destination] = []
+    public weak var childCoordinator: NavigationCoordinator<Destination>? // Reference to another coordinator
     
-    public init() {}
+    public init(childCoordinator: NavigationCoordinator<Destination>? = nil) {
+        self.childCoordinator = childCoordinator
+    }
     
     public func push(_ destination: Destination) {
         print("Pushing destination: \(destination)") // Debug
-        path.append(destination)
+        if let child = childCoordinator, child.handles(destination) {
+            child.push(destination) // Delegate to child if it handles this destination
+        } else {
+            path.append(destination)
+        }
         print("Path updated: \(path)") // Debug
     }
     
     public func pop() {
-        print("Popping last destination") // Debug
-        path.removeLast()
+        if !path.isEmpty {
+            path.removeLast()
+        } else if let child = childCoordinator {
+            child.pop() // Delegate dismissal to child if path is empty here
+        }
     }
     
-    public func popToRoot() {
-        print("Popping to root") // Debug
-        path.removeAll()
+    // Check if this coordinator handles a specific destination
+    open func handles(_ destination: Destination) -> Bool {
+        true // Override in subclasses if needed
     }
 }
 
