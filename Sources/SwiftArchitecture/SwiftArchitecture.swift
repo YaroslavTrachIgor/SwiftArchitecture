@@ -51,7 +51,7 @@ struct Injected<T> {
 }
 
 // Simplified NavigationCoordinator with a reference to another coordinator
-public class NavigationCoordinator<Destination: Hashable>: ObservableObject {
+open class NavigationCoordinator<Destination: Hashable>: ObservableObject {
     @Published public var path: [Destination] = []
     public weak var childCoordinator: NavigationCoordinator<Destination>? // Reference to another coordinator
     
