@@ -9,12 +9,10 @@ import SwiftUI
 
 public protocol ViewModelProtocol {
     associatedtype InteractorType
-    associatedtype RouterType
     
     var interactor: InteractorType { get }
-    var router: RouterType { get }
     
-    init(interactor: InteractorType, router: RouterType)
+    init(interactor: InteractorType)
 }
 
 public protocol InteractorProtocol {
@@ -24,17 +22,6 @@ public protocol InteractorProtocol {
     init()
 }
 
-public protocol RouterProtocol {
-    associatedtype ViewModelType
-    associatedtype Destination: Hashable
-    
-    var viewModel: ViewModelType? { get set }
-    var navigationCoordinator: NavigationCoordinator<Destination> { get }
-    
-    init(navigationCoordinator: NavigationCoordinator<Destination>)
-    func navigate(to destination: Destination)
-    func dismiss()
-}
 
 @propertyWrapper
 struct Injected<T> {
@@ -50,58 +37,18 @@ struct Injected<T> {
     }
 }
 
-// Simplified NavigationCoordinator with a reference to another coordinator
-open class NavigationCoordinator<Destination: Hashable>: ObservableObject {
-    @Published public var path: [Destination] = []
-    public weak var childCoordinator: NavigationCoordinator<Destination>? // Reference to another coordinator
-    
-    public init(childCoordinator: NavigationCoordinator<Destination>? = nil) {
-        self.childCoordinator = childCoordinator
-    }
-    
-    public func push(_ destination: Destination) {
-        print("Pushing destination: \(destination)") // Debug
-        if let child = childCoordinator, child.handles(destination) {
-            child.push(destination) // Delegate to child if it handles this destination
-        } else {
-            path.append(destination)
-        }
-        print("Path updated: \(path)") // Debug
-    }
-    
-    public func pop() {
-        if !path.isEmpty {
-            path.removeLast()
-        } else if let child = childCoordinator {
-            child.pop() // Delegate dismissal to child if path is empty here
-        }
-    }
-    
-    // Check if this coordinator handles a specific destination
-    open func handles(_ destination: Destination) -> Bool {
-        true // Override in subclasses if needed
-    }
-}
-
 public final class ModuleAssembler {
-    @MainActor public static func assemble<P, I, R>(
+    @MainActor public static func assemble<P, I>(
         viewModel: P.Type,
-        interactor: I.Type,
-        router: R.Type,
-        navigationCoordinator: NavigationCoordinator<R.Destination>
+        interactor: I.Type
     ) -> P where
     I: InteractorProtocol,
     P: ViewModelProtocol,
-    R: RouterProtocol,
     P.InteractorType == I,
-    P.RouterType == R,
-    I.ViewModelType == P,
-    R.ViewModelType == P {
+    I.ViewModelType == P {
         var interactor = I.init()
-        var router = R.init(navigationCoordinator: navigationCoordinator)
-        let viewModel = P.init(interactor: interactor, router: router)
+        let viewModel = P.init(interactor: interactor)
         interactor.viewModel = viewModel
-        router.viewModel = viewModel
         return viewModel
     }
 }
@@ -116,11 +63,9 @@ public typealias BaseSwiftUIView = View & BaseSwiftUIViewProtocol
 @MainActor
 open class ViewModel<I, R>: @preconcurrency ViewModelProtocol, ObservableObject {
     public let interactor: I
-    public let router: R
     
-    required public init(interactor: I, router: R) {
+    required public init(interactor: I) {
         self.interactor = interactor
-        self.router = router
     }
 }
 
@@ -129,24 +74,4 @@ open class BaseInteractor<VM: AnyObject>: @preconcurrency InteractorProtocol {
     public weak var viewModel: VM?
     
     required public init() {}
-}
-
-@MainActor
-open class BaseRouter<VM: AnyObject, D: Hashable>: @preconcurrency RouterProtocol {
-    public typealias Destination = D
-    
-    public weak var viewModel: VM?
-    public let navigationCoordinator: NavigationCoordinator<Destination>
-    
-    required public init(navigationCoordinator: NavigationCoordinator<Destination>) {
-        self.navigationCoordinator = navigationCoordinator
-    }
-    
-    public func navigate(to destination: Destination) {
-        navigationCoordinator.push(destination)
-    }
-    
-    public func dismiss() {
-        navigationCoordinator.pop()
-    }
 }
